@@ -14,7 +14,7 @@ A production-ready REST API built with Node.js/Express featuring JWT authenticat
 - ✅ API versioning (v1)
 - ✅ API documentation (Postman collection)
 - ✅ CORS support for frontend integration
-- ✅ In-memory data storage (easily replaceable with MongoDB/PostgreSQL)
+- ✅ Persistent storage using MongoDB via Mongoose
 
 ### Frontend (React)
 - ✅ User registration & login UI
@@ -91,20 +91,39 @@ cd backend
 npm install
 ```
 
-3. Create `.env` file (already provided):
+3. Create `.env` file (already provided). Add your MongoDB connection URI:
 ```
 PORT=5000
 JWT_SECRET=your_super_secret_jwt_key_change_this_in_production
 JWT_EXPIRE=24h
 NODE_ENV=development
+MONGO_URI=mongodb://localhost:27017/testprod
 ```
 
-4. Start the server:
+4. Ensure MongoDB is running locally or use a hosted MongoDB. Example options:
+
+- Start local MongoDB service (Windows):
+```powershell
+net start MongoDB
+```
+
+- Or run via Docker:
+```powershell
+docker run -d -p 27017:27017 --name mongo mongo:6
+```
+
+5. Start the server (it will connect to MongoDB):
 ```bash
 npm run dev
 ```
 
 The API will run at `http://localhost:5000`
+
+6. (Optional) Seed an admin user (development only):
+```bash
+node scripts/seedAdmin.js
+```
+This creates an admin with email `admin@example.com` and password `StrongPass123!`. Remove or secure the script for production.
 
 ### Frontend Setup
 
@@ -401,8 +420,9 @@ curl -X POST http://localhost:5000/api/v1/tasks \
 ```
 PORT=5000                    # Server port
 JWT_SECRET=your_secret_key   # JWT signing secret (CHANGE IN PRODUCTION)
-JWT_EXPIRE=24h              # Token expiration time
-NODE_ENV=development        # Environment mode
+JWT_EXPIRE=24h               # Token expiration time
+NODE_ENV=development         # Environment mode
+MONGO_URI=mongodb://localhost:27017/testprod  # MongoDB connection URI
 ```
 
 ## Error Handling

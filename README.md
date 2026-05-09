@@ -323,6 +323,23 @@ Authorization: Bearer {admin_token}
 ### API Documentation
 Import the Postman collection (`Postman_Collection.json`) to test all endpoints
 
+### Postman Workflow
+
+1. Open Postman and import `Postman_Collection.json`.
+2. Create a Postman environment and set:
+  - `base_url` = `http://localhost:5000`
+  - `token` = leave empty at first; it is set automatically after login
+3. Run the `Authentication -> Login` request first.
+4. The login test script stores the JWT in the `token` variable automatically.
+5. Use the remaining requests in the collection to test user and task flows.
+6. For admin testing, log in with the seeded admin account (`admin@example.com` / `StrongPass123!`) and then run:
+  - `Authentication -> Get All Users`
+  - `Authentication -> Delete User`
+  - `Tasks -> Get All Tasks`
+  - `Tasks -> Delete Task`
+
+Postman already includes the `Authorization: Bearer {{token}}` header where needed, so once login runs successfully, the protected requests should work without extra setup.
+
 ## Admin Features
 
 When logged in as an admin, the frontend dashboard shows extra controls:
@@ -337,14 +354,35 @@ Admin access is backed by the role checks in the backend, so the same admin toke
 
 ## Role-Based Access Control
 
+This project uses JWT-based RBAC in the backend and role-aware UI behavior in the frontend. The token carries the user role, and the backend enforces access using `verifyToken`, `restrictToRole`, and `authorize`.
+
 ### Roles & Permissions
 
-| Role | Permissions |
-|------|------------|
-| Admin | create, read, update, delete, manage_users |
-| Manager | create, read, update, manage_own_items |
-| User | create, read, update_own |
-| Guest | read |
+| Role | What it can do |
+|------|-----------------|
+| Admin | Create, read, update, delete, manage users, and manage all tasks |
+| Manager | Create, read, update, and manage their own items |
+| User | Create, read, and update their own items |
+| Guest | Read-only access |
+
+### Permission Rules
+
+The backend permission map is defined in [backend/src/config/constants.js](backend/src/config/constants.js):
+
+| Role | Backend permissions |
+|------|---------------------|
+| admin | `create`, `read`, `update`, `delete`, `manage_users` |
+| manager | `create`, `read`, `update`, `manage_own_items` |
+| user | `create`, `read`, `update_own` |
+| guest | `read` |
+
+### How RBAC Works
+
+1. `verifyToken` reads the JWT from the `Authorization: Bearer <token>` header.
+2. The JWT payload includes the user's role.
+3. `restrictToRole('admin')` blocks non-admin users from admin-only routes.
+4. `authorize('delete')` checks permission names against the role permission map.
+5. The frontend uses the stored `user.role` to show admin panels and hide admin-only controls from regular users.
 
 ### Authorization Middleware
 
@@ -360,6 +398,19 @@ router.get('/admin-only', verifyToken, restrictToRole('admin'), controller);
 // Check specific permissions
 router.get('/special-action', verifyToken, authorize('delete'), controller);
 ```
+
+### RBAC Endpoints
+
+- Public: `POST /api/v1/auth/register`, `POST /api/v1/auth/login`
+- Authenticated user: `GET /api/v1/auth/profile`, `PUT /api/v1/auth/profile`, task CRUD routes
+- Admin only: `GET /api/v1/auth/users`, `DELETE /api/v1/auth/users/{id}`, `GET /api/v1/tasks/all`, `DELETE /api/v1/tasks/{id}`
+
+### Frontend RBAC Behavior
+
+- Non-admin users see only their own tasks.
+- Admin users see the admin dashboard section with all users and all tasks.
+- Admin users can delete non-admin users and delete any task.
+- The task owner name is shown in the admin task list instead of the raw database id.
 
 ## Security Features
 
@@ -382,11 +433,11 @@ router.get('/special-action', verifyToken, authorize('delete'), controller);
 
 ### Using Postman
 
-1. Import the Postman collection (see section below)
-2. Set up environment variables:
-   - `base_url`: http://localhost:5000
-   - `token`: (will be set after login)
-3. Test endpoints in the collection
+1. Import the Postman collection (`Postman_Collection.json`).
+2. Select the environment you created and confirm `base_url` is `http://localhost:5000`.
+3. Send the `Authentication -> Login` request to store the JWT in `token` automatically.
+4. Use the `Authentication`, `Tasks`, and admin requests to test the API.
+5. If you want to test admin actions, log in with the admin account and use the admin-only requests listed above.
 
 ### Manual Testing with cURL
 

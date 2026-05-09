@@ -21,6 +21,8 @@ A production-ready REST API built with Node.js/Express featuring JWT authenticat
 - ✅ Protected dashboard with JWT authentication
 - ✅ Task management (Create, Read, Update, Delete)
 - ✅ Task statistics dashboard
+- ✅ Admin dashboard for managing users and all tasks
+- ✅ Admin task deletion and user deletion controls
 - ✅ Real-time error/success notifications
 - ✅ Responsive design
 - ✅ Automatic token refresh on 401 errors
@@ -222,6 +224,12 @@ GET /api/v1/auth/users
 Authorization: Bearer {admin_token}
 ```
 
+#### Delete User (Admin Only)
+```
+DELETE /api/v1/auth/users/{id}
+Authorization: Bearer {admin_token}
+```
+
 ### Task Endpoints
 
 #### Create Task
@@ -300,8 +308,32 @@ Response (200):
 }
 ```
 
+#### Get All Tasks (Admin Only)
+```
+GET /api/v1/tasks/all
+Authorization: Bearer {admin_token}
+```
+
+#### Delete Any Task (Admin Only)
+```
+DELETE /api/v1/tasks/{id}
+Authorization: Bearer {admin_token}
+```
+
 ### API Documentation
 Import the Postman collection (`Postman_Collection.json`) to test all endpoints
+
+## Admin Features
+
+When logged in as an admin, the frontend dashboard shows extra controls:
+
+- View all registered users.
+- Delete non-admin users.
+- View all tasks across the system.
+- Delete any task, including tasks created by other users.
+- See the task owner name instead of the raw database id.
+
+Admin access is backed by the role checks in the backend, so the same admin token works for both the dashboard and the protected API routes.
 
 ## Role-Based Access Control
 
@@ -346,6 +378,7 @@ router.get('/special-action', verifyToken, authorize('delete'), controller);
 3. Register a new account
 4. Login with credentials
 5. Create, update, and delete tasks from the dashboard
+6. Login with an admin account to access the admin controls for users and all tasks
 
 ### Using Postman
 
@@ -397,7 +430,7 @@ curl -X POST http://localhost:5000/api/v1/tasks \
 2. **API Versioning**: Routes are versioned (v1, v2, etc.)
 3. **Error Handling**: Centralized error handling middleware
 4. **Validation Layer**: Input validation prevents bad data
-5. **In-Memory DB**: Can be easily replaced with MongoDB/PostgreSQL
+5. **Persistent DB**: Uses MongoDB via Mongoose for durable storage
 6. **Middleware Architecture**: Easy to add authentication, logging, rate limiting
 
 ## Future Enhancements

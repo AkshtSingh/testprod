@@ -1,6 +1,7 @@
 require('dotenv').config();
 const express = require('express');
 const cors = require('cors');
+const mongoose = require('mongoose');
 const { errorMiddleware } = require('./utils/errorHandler');
 
 // Route imports
@@ -37,10 +38,21 @@ app.use((req, res) => {
 // Error handling middleware
 app.use(errorMiddleware);
 
-// Start server
+// Connect to MongoDB and start server
 const PORT = process.env.PORT || 5000;
-app.listen(PORT, () => {
-  console.log(`Server running on port ${PORT}`);
+const MONGO_URI = process.env.MONGO_URI;
+
+mongoose.connect(MONGO_URI, {
+  useNewUrlParser: true,
+  useUnifiedTopology: true
+}).then(() => {
+  app.listen(PORT, () => {
+    console.log(`Server running on port ${PORT}`);
+    console.log('Connected to MongoDB');
+  });
+}).catch(err => {
+  console.error('Failed to connect to MongoDB', err);
+  process.exit(1);
 });
 
 module.exports = app;

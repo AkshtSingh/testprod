@@ -1,87 +1,65 @@
+const mongoose = require('mongoose');
 const bcrypt = require('bcryptjs');
 const jwt = require('jsonwebtoken');
 const { ROLES } = require('../config/constants');
 
-// In-memory database (for demo)
-let users = [];
-let userId = 1;
+const userSchema = new mongoose.Schema({
+  username: { type: String, required: true },
+  email: { type: String, required: true, unique: true },
+  password: { type: String, required: true },
+  role: { type: String, enum: Object.values(ROLES), default: ROLES.USER },
+  createdAt: { type: Date, default: Date.now }
+});
 
-class User {
-  constructor(username, email, hashedPassword, role = ROLES.USER) {
-    this.id = userId++;
-    this.username = username;
-    this.email = email;
-    this.password = hashedPassword;
-    this.role = role;
-    this.createdAt = new Date();
-  }
+// Hash password before save
+userSchema.pre('save', async function(next) {
+  if (!this.isModified('password')) return next();
+  this.password = await bcrypt.hash(this.password, 10);
+  next();
+});
 
-  // Generate JWT token
-  generateToken() {
-    return jwt.sign(
-      { id: this.id, email: this.email, role: this.role },
-      process.env.JWT_SECRET,
-      { expiresIn: process.env.JWT_EXPIRE }
-    );
-  }
+userSchema.methods.generateToken = function() {
+  return jwt.sign({ id: this._id.toString(), email: this.email, role: this.role }, process.env.JWT_SECRET, { expiresIn: process.env.JWT_EXPIRE });
+};
 
-  // Compare password
-  static async comparePassword(password, hashedPassword) {
-    return await bcrypt.compare(password, hashedPassword);
-  }
+userSchema.methods.toJSON = function() {
+  const obj = this.toObject();
+  delete obj.password;
+  return obj;
+};
 
-  // Hash password
-  static async hashPassword(password) {
-    return await bcrypt.hash(password, 10);
-  }
+userSchema.methods.comparePassword = async function(password) {
+  return await bcrypt.compare(password, this.password);
+};
 
-  toJSON() {
-    const { password, ...user } = this;
-    return user;
-  }
-}
+const User = mongoose.model('User', userSchema);
 
-// User repository functions
 const UserModel = {
-  // Create user
   async create(username, email, password, role = ROLES.USER) {
-    const hashedPassword = await User.hashPassword(password);
-    const user = new User(username, email, hashedPassword, role);
-    users.push(user);
+    const user = new User({ username, email, password, role });
+    await user.save();
     return user;
   },
 
-  // Find user by email
-  findByEmail(email) {
-    return users.find(u => u.email === email);
+  async findByEmail(email) {
+    return await User.findOne({ email });
   },
 
-  // Find user by id
-  findById(id) {
-    return users.find(u => u.id === id);
+  async findById(id) {
+    return await User.findById(id);
   },
 
-  // Find all users
-  findAll() {
-    return users;
+  async findAll() {
+    return await User.find();
   },
 
-  // Update user
-  updateUser(id, updates) {
-    const user = users.find(u => u.id === id);
-    if (user) {
-      Object.assign(user, updates);
-    }
+  async updateUser(id, updates) {
+    const user = await User.findByIdAndUpdate(id, updates, { new: true });
     return user;
   },
 
-  // Delete user
-  deleteUser(id) {
-    const index = users.findIndex(u => u.id === id);
-    if (index !== -1) {
-      return users.splice(index, 1)[0];
-    }
-    return null;
+  async deleteUser(id) {
+    return await User.findByIdAndDelete(id);
   }
 };
 

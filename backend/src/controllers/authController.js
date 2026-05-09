@@ -9,7 +9,7 @@ exports.register = asyncHandler(async (req, res) => {
   const { username, email, password, role } = req.body;
 
   // Check if user exists
-  const existingUser = UserModel.findByEmail(email);
+  const existingUser = await UserModel.findByEmail(email);
   if (existingUser) {
     throw new ErrorHandler('User already exists with this email', 409);
   }
@@ -36,13 +36,13 @@ exports.login = asyncHandler(async (req, res) => {
   const { email, password } = req.body;
 
   // Find user by email
-  const user = UserModel.findByEmail(email);
+  const user = await UserModel.findByEmail(email);
   if (!user) {
     throw new ErrorHandler('Invalid email or password', 401);
   }
 
   // Compare password
-  const isPasswordValid = await User.comparePassword(password, user.password);
+  const isPasswordValid = await user.comparePassword(password);
   if (!isPasswordValid) {
     throw new ErrorHandler('Invalid email or password', 401);
   }
@@ -63,7 +63,7 @@ exports.login = asyncHandler(async (req, res) => {
 // @desc    Get current user profile
 // @access  Private
 exports.getProfile = asyncHandler(async (req, res) => {
-  const user = UserModel.findById(req.user.id);
+  const user = await UserModel.findById(req.user.id);
   
   if (!user) {
     throw new ErrorHandler('User not found', 404);
@@ -81,7 +81,7 @@ exports.getProfile = asyncHandler(async (req, res) => {
 exports.updateProfile = asyncHandler(async (req, res) => {
   const { username } = req.body;
   
-  const user = UserModel.updateUser(req.user.id, { username });
+  const user = await UserModel.updateUser(req.user.id, { username });
   
   if (!user) {
     throw new ErrorHandler('User not found', 404);
@@ -98,7 +98,7 @@ exports.updateProfile = asyncHandler(async (req, res) => {
 // @desc    Get all users (Admin only)
 // @access  Private/Admin
 exports.getAllUsers = asyncHandler(async (req, res) => {
-  const allUsers = UserModel.findAll();
+  const allUsers = await UserModel.findAll();
 
   res.status(200).json({
     success: true,
@@ -110,7 +110,7 @@ exports.getAllUsers = asyncHandler(async (req, res) => {
 // @desc    Delete user (Admin only)
 // @access  Private/Admin
 exports.deleteUser = asyncHandler(async (req, res) => {
-  const user = UserModel.deleteUser(parseInt(req.params.id));
+  const user = await UserModel.deleteUser(req.params.id);
 
   if (!user) {
     throw new ErrorHandler('User not found', 404);

@@ -1,64 +1,52 @@
-// In-memory database for tasks
-let tasks = [];
-let taskId = 1;
+const mongoose = require('mongoose');
 
-class Task {
-  constructor(title, description, userId, priority = 'medium', status = 'pending') {
-    this.id = taskId++;
-    this.title = title;
-    this.description = description;
-    this.userId = userId;
-    this.priority = priority;
-    this.status = status;
-    this.createdAt = new Date();
-    this.updatedAt = new Date();
-  }
-}
+const taskSchema = new mongoose.Schema({
+  title: { type: String, required: true },
+  description: { type: String, default: '' },
+  userId: { type: mongoose.Schema.Types.ObjectId, ref: 'User', required: true },
+  priority: { type: String, enum: ['low', 'medium', 'high'], default: 'medium' },
+  status: { type: String, enum: ['pending', 'in_progress', 'completed'], default: 'pending' },
+  createdAt: { type: Date, default: Date.now },
+  updatedAt: { type: Date, default: Date.now }
+});
+
+taskSchema.pre('save', function(next) {
+  this.updatedAt = Date.now();
+  next();
+});
+
+const Task = mongoose.model('Task', taskSchema);
 
 const TaskModel = {
-  // Create task
-  create(title, description, userId, priority = 'medium') {
-    const task = new Task(title, description, userId, priority);
-    tasks.push(task);
+  async create(title, description, userId, priority = 'medium') {
+    const task = new Task({ title, description, userId, priority });
+    await task.save();
     return task;
   },
 
-  // Find task by id
-  findById(id) {
-    return tasks.find(t => t.id === id);
+  async findById(id) {
+    return await Task.findById(id).lean();
   },
 
-  // Find all tasks for a user
-  findByUserId(userId) {
-    return tasks.filter(t => t.userId === userId);
+  async findByUserId(userId) {
+    return await Task.find({ userId }).lean();
   },
 
-  // Find all tasks
-  findAll() {
-    return tasks;
+  async findAll() {
+    return await Task.find().lean();
   },
 
-  // Update task
-  update(id, updates) {
-    const task = tasks.find(t => t.id === id);
-    if (task) {
-      Object.assign(task, updates, { updatedAt: new Date() });
-    }
-    return task;
+  async update(id, updates) {
+    updates.updatedAt = Date.now();
+    return await Task.findByIdAndUpdate(id, updates, { new: true }).lean();
   },
 
-  // Delete task
-  delete(id) {
-    const index = tasks.findIndex(t => t.id === id);
-    if (index !== -1) {
-      return tasks.splice(index, 1)[0];
-    }
-    return null;
+  async delete(id) {
+    return await Task.findByIdAndDelete(id).lean();
   },
 
-  // Get task statistics
-  getStats(userId) {
-    const userTasks = tasks.filter(t => t.userId === userId);
+  async getStats(userId) {
+    const userTasks = await Task.find({ userId }).lean();
     return {
       total: userTasks.length,
       pending: userTasks.filter(t => t.status === 'pending').length,

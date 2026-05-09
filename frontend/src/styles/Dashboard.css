@@ -19,6 +19,23 @@
   margin: 0;
 }
 
+.role-badge {
+  display: inline-block;
+  margin-top: 8px;
+  padding: 4px 10px;
+  border-radius: 999px;
+  background: #e9ecef;
+  color: #495057;
+  font-size: 12px;
+  font-weight: 700;
+  text-transform: uppercase;
+}
+
+.admin-badge {
+  background: #fff3cd;
+  color: #856404;
+}
+
 .logout-btn {
   background: #ff6b6b;
   color: white;
@@ -55,6 +72,12 @@
   font-size: 32px;
 }
 
+.dashboard-subtitle {
+  color: rgba(255, 255, 255, 0.9);
+  margin-top: 8px;
+  font-size: 15px;
+}
+
 .toggle-form-btn {
   background: white;
   color: #667eea;
@@ -73,4 +96,85 @@
   color: white;
   font-size: 18px;
   padding: 40px;
+}
+
+.admin-panel {
+  margin-top: 40px;
+}
+
+.admin-panel-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  gap: 12px;
+  margin-bottom: 20px;
+  color: white;
+}
+
+.admin-panel-header h3 {
+  font-size: 24px;
+}
+
+.admin-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(320px, 1fr));
+  gap: 20px;
+}
+
+.admin-card {
+  background: rgba(255, 255, 255, 0.96);
+  border-radius: 12px;
+  padding: 24px;
+  box-shadow: 0 5px 20px rgba(0, 0, 0, 0.1);
+}
+
+.admin-card h4 {
+  color: #667eea;
+  margin-bottom: 16px;
+  font-size: 20px;
+}
+
+.admin-list {
+  display: grid;
+  gap: 14px;
+}
+
+.admin-list-item,
+.admin-task-item {
+  border: 1px solid #e9ecef;
+  border-radius: 10px;
+  padding: 14px;
+  background: white;
+}
+
+.admin-list-item {
+  display: flex;
+  justify-content: space-between;
+  gap: 12px;
+  align-items: center;
+}
+
+.admin-list-item p,
+.admin-task-item p,
+.admin-task-item small {
+  color: #666;
+  margin-top: 6px;
+}
+
+.admin-empty {
+  color: #666;
+}
+
+.small-btn {
+  flex: 0 0 auto;
+  padding: 8px 12px;
+  font-size: 13px;
+}
+
+@media (max-width: 768px) {
+  .admin-panel-header,
+  .admin-list-item {
+    flex-direction: column;
+    align-items: flex-start;
+  }
 }

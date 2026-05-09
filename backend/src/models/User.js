@@ -9,6 +9,27 @@ const userSchema = new mongoose.Schema({
   password: { type: String, required: true },
   role: { type: String, enum: Object.values(ROLES), default: ROLES.USER },
   createdAt: { type: Date, default: Date.now }
+}, {
+  toJSON: {
+    virtuals: true,
+    transform: (doc, ret) => {
+      ret.id = ret._id.toString();
+      delete ret._id;
+      delete ret.__v;
+      delete ret.password;
+      return ret;
+    }
+  },
+  toObject: {
+    virtuals: true,
+    transform: (doc, ret) => {
+      ret.id = ret._id.toString();
+      delete ret._id;
+      delete ret.__v;
+      delete ret.password;
+      return ret;
+    }
+  }
 });
 
 // Hash password before save
@@ -20,12 +41,6 @@ userSchema.pre('save', async function(next) {
 
 userSchema.methods.generateToken = function() {
   return jwt.sign({ id: this._id.toString(), email: this.email, role: this.role }, process.env.JWT_SECRET, { expiresIn: process.env.JWT_EXPIRE });
-};
-
-userSchema.methods.toJSON = function() {
-  const obj = this.toObject();
-  delete obj.password;
-  return obj;
 };
 
 userSchema.methods.comparePassword = async function(password) {

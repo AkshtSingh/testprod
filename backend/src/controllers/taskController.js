@@ -1,6 +1,14 @@
 const { ErrorHandler, asyncHandler } = require('../utils/errorHandler');
 const { TaskModel } = require('../models/Task');
 
+const getOwnerId = (owner) => {
+  if (!owner) return null;
+  if (typeof owner === 'string') return owner;
+  if (owner._id) return owner._id.toString();
+  if (typeof owner.toString === 'function') return owner.toString();
+  return null;
+};
+
 // @route   POST /api/v1/tasks
 // @desc    Create a new task
 // @access  Private
@@ -39,7 +47,9 @@ exports.getTaskById = asyncHandler(async (req, res) => {
   }
 
   // Check if user owns the task
-  if (task.userId.toString() !== req.user.id && req.user.role !== 'admin') {
+  const ownerId = getOwnerId(task.userId);
+
+  if (ownerId && ownerId !== req.user.id && req.user.role !== 'admin') {
     throw new ErrorHandler('Not authorized to access this task', 403);
   }
 
@@ -62,7 +72,9 @@ exports.updateTask = asyncHandler(async (req, res) => {
   }
 
   // Check if user owns the task
-  if (task.userId.toString() !== req.user.id && req.user.role !== 'admin') {
+  const ownerId = getOwnerId(task.userId);
+
+  if (ownerId && ownerId !== req.user.id && req.user.role !== 'admin') {
     throw new ErrorHandler('Not authorized to update this task', 403);
   }
 
@@ -92,7 +104,9 @@ exports.deleteTask = asyncHandler(async (req, res) => {
   }
 
   // Check if user owns the task
-  if (task.userId.toString() !== req.user.id && req.user.role !== 'admin') {
+  const ownerId = getOwnerId(task.userId);
+
+  if (ownerId && ownerId !== req.user.id && req.user.role !== 'admin') {
     throw new ErrorHandler('Not authorized to delete this task', 403);
   }
 

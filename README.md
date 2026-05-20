@@ -531,14 +531,4 @@ Common HTTP Status Codes:
 - `409`: Conflict - Resource already exists
 - `500`: Internal Server Error
 
-## License
 
-MIT License - Feel free to use this project for personal or commercial purposes.
-
-## Support
-
-For issues, questions, or suggestions, please create an issue in the repository.
-
----
-
-**Built with ❤️ for scalable, secure REST APIs**
